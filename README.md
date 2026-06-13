@@ -2,8 +2,6 @@
 
 Actual Local AI Studio is a Windows-first local image generation workspace for Stable Diffusion models. It runs from a local web UI, keeps image generation on your machine, and avoids requiring a global Python or Node.js install.
 
-The repository contains the app source, setup scripts, and screenshots. Model weights, generated images, portable runtimes, Python dependencies, backend binaries, and Hugging Face cache files are intentionally not included.
-
 ## Features
 
 - Local web UI served at `http://localhost:1420`
@@ -14,22 +12,6 @@ The repository contains the app source, setup scripts, and screenshots. Model we
 - Live generation progress, backend status, RAM/VRAM telemetry, and model load state
 - Local gallery with saved images and metadata in `app/outputs/`
 - One-click Windows launch through `start.bat`
-
-## What Is Not Committed
-
-Large runtime and user data folders are ignored on purpose:
-
-- `app/models/`
-- `app/outputs/`
-- `app/backend/`
-- `app/tools/`
-- `app/pydeps/`
-- `app/hf-cache/`
-- `app/dist/`
-- `node_modules/`
-- model/checkpoint files such as `.safetensors`, `.gguf`, `.ckpt`, and `.onnx`
-
-This keeps the GitHub repo small and prevents accidentally publishing model weights or generated images.
 
 ## Requirements
 
@@ -117,4 +99,4 @@ If port `1420` is already in use, close the existing app window or set `FRONTEND
 
 MIT. See `LICENSE`.
 
-This project can download or use third-party model files and backend components. Those files are governed by their own licenses and are not included in this repository.
+Third-party model files and backend components are governed by their own licenses.
