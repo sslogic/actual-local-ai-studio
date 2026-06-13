@@ -78,6 +78,7 @@ function resolvePythonExe() {
     path.join(ROOT, "app", "python", "python.exe"),
     path.join(ROOT, "app", "tools", "python", "python.exe"),
     path.join(ROOT, ".venv", "Scripts", "python.exe"),
+    path.join(os.homedir(), ".cache", "codex-runtimes", "codex-primary-runtime", "dependencies", "python", "python.exe"),
     "python",
     "py",
   ].filter(Boolean);
@@ -94,6 +95,39 @@ function resolvePythonExe() {
 const PYTHON_EXE = resolvePythonExe();
 const PYDEPS = path.join(ROOT, "app", "pydeps");
 const DIFFUSERS_BACKEND = path.join(ROOT, "scripts", "diffusers_backend.py");
+let diffusersAvailability = null;
+
+function getDiffusersDllPaths() {
+  return [
+    path.join(PYDEPS, "torch", "lib"),
+  ].filter((dir) => fs.existsSync(dir));
+}
+
+function getDiffusersEnv() {
+  const dllPaths = getDiffusersDllPaths();
+  return {
+    ...process.env,
+    PYTHONPATH: PYDEPS,
+    PATH: [...dllPaths, process.env.PATH || ""].filter(Boolean).join(path.delimiter),
+    HF_HOME: path.join(ROOT, "app", "hf-cache"),
+    TRANSFORMERS_CACHE: path.join(ROOT, "app", "hf-cache"),
+    HF_HUB_DISABLE_SYMLINKS_WARNING: "1",
+  };
+}
+
+function canStartDiffusers() {
+  if (diffusersAvailability !== null) return diffusersAvailability;
+  if (!PYTHON_EXE || !fs.existsSync(PYDEPS) || !fs.existsSync(DIFFUSERS_BACKEND)) {
+    diffusersAvailability = false;
+    return diffusersAvailability;
+  }
+  const probe = spawnSync(PYTHON_EXE, ["-c", "import torch"], {
+    env: getDiffusersEnv(),
+    stdio: "ignore",
+  });
+  diffusersAvailability = probe.status === 0;
+  return diffusersAvailability;
+}
 
 // ── Backend process state ─────────────────────────────────────────────────────
 let backendProc  = null;
@@ -909,7 +943,8 @@ function startFallbackBackend(settings = {}) {
 }
 
 function startDiffusersBackend(settings = {}) {
-  if (!PYTHON_EXE || !fs.existsSync(PYDEPS) || !fs.existsSync(DIFFUSERS_BACKEND)) {
+  if (!canStartDiffusers()) {
+    console.log("  [backend] Diffusers is unavailable; starting fallback backend");
     return startFallbackBackend(settings);
   }
 
@@ -931,13 +966,7 @@ function startDiffusersBackend(settings = {}) {
     device: "NVIDIA CUDA",
   };
 
-  const env = {
-    ...process.env,
-    PYTHONPATH: PYDEPS,
-    HF_HOME: path.join(ROOT, "app", "hf-cache"),
-    TRANSFORMERS_CACHE: path.join(ROOT, "app", "hf-cache"),
-    HF_HUB_DISABLE_SYMLINKS_WARNING: "1",
-  };
+  const env = getDiffusersEnv();
 
   const args = [
     DIFFUSERS_BACKEND,
@@ -1020,8 +1049,8 @@ async function startBackend(settings = {}) {
   currentSettings.backendMode = backendMode;
   currentSettings.backendBinary = path.basename(backendPath);
 
-  if (osPlatform === "win32" && resolvedBackendType === "cpu") {
-    console.log("  [backend] Native Windows backend unavailable; starting Diffusers backend");
+  if (osPlatform === "win32" && resolvedBackendType === "cpu" && canStartDiffusers()) {
+    console.log("  [backend] Starting Diffusers backend");
     return startDiffusersBackend(currentSettings);
   }
 
