@@ -10,6 +10,8 @@ Double-click:
 start.bat
 ```
 
+On the first launch, the app sets up the files it needs automatically. Keep the computer online until setup finishes.
+
 The app opens at:
 
 ```text
