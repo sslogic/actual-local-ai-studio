@@ -18,6 +18,10 @@ start.bat
 
 Setup downloads and builds the app files it needs. Leave the computer online until it finishes.
 
+Setup download size is about 70 MB on non-NVIDIA systems, or about 780 MB on NVIDIA systems.
+
+Models are downloaded separately in the app. Most are 2-7 GB each.
+
 When it is ready, it opens:
 
 ```text
