@@ -12,8 +12,6 @@ start.bat
 
 First launch downloads and builds the local app files it needs. Leave the computer online until that finishes.
 
-No personal data, generated images, or local models are included in this repo.
-
 When it is ready, it opens:
 
 ```text
