@@ -1,4 +1,4 @@
-# Local AI Image Generator - Setup Script
+# Mayniak AI Studio - Setup Script
 # scripts/ lives at root, app/ is a sibling folder
 
 $scriptDir   = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -16,7 +16,7 @@ function Print-Header {
     Clear-Host
     Write-Host ""
     Write-Host "  ============================================================" -ForegroundColor Cyan
-    Write-Host "   LOCAL AI IMAGE GENERATOR  -  First-Time Setup" -ForegroundColor Cyan
+    Write-Host "   MAYNIAK AI STUDIO  -  First-Time Setup" -ForegroundColor Cyan
     Write-Host "   100% Self-Contained  |  No System Install Required" -ForegroundColor DarkCyan
     Write-Host "  ============================================================" -ForegroundColor Cyan
     Write-Host ""
@@ -176,7 +176,7 @@ if ((Test-Path $nodeExe) -and (Test-Path $npmCmd)) {
     }
 
     if (-not ((Test-Path $nodeExe) -and (Test-Path $npmCmd))) {
-        Print-Fail "Portable Node.js install is incomplete. Close any running Local AI Image Generator windows, delete app/tools/node-win, then run setup again."
+        Print-Fail "Portable Node.js install is incomplete. Close any running Mayniak AI Studio windows, delete app/tools/node-win, then run setup again."
         Read-Host; exit 1
     }
 
@@ -384,7 +384,7 @@ Write-Host ""
 
 if (-not (Test-Path $npmCmd)) {
     Print-Fail "npm.cmd was not found at $npmCmd"
-    Print-Fail "Close any running Local AI Image Generator windows, delete app/tools/node-win, then run setup again."
+    Print-Fail "Close any running Mayniak AI Studio windows, delete app/tools/node-win, then run setup again."
     Read-Host; exit 1
 }
 

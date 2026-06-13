@@ -1,4 +1,4 @@
-# Actual Local AI Studio
+# Mayniak AI Studio
 
 Local AI image generation for Windows.
 
@@ -7,10 +7,16 @@ Local AI image generation for Windows.
 Download the ZIP, unzip it, then double-click:
 
 ```text
+setup.bat
+```
+
+When setup is done, double-click:
+
+```text
 start.bat
 ```
 
-First launch downloads and builds the app files it needs. Leave the computer online until it finishes.
+Setup downloads and builds the app files it needs. Leave the computer online until it finishes.
 
 When it is ready, it opens:
 
