@@ -1,0 +1,34 @@
+# Runtime data and generated output
+app/models/
+app/outputs/
+app/hf-cache/
+app/dist/
+
+# Downloaded model weights and checkpoints
+*.safetensors
+*.gguf
+*.ckpt
+*.onnx
+
+# Portable runtimes, dependency installs, and native backend binaries
+app/tools/
+app/backend/
+app/pydeps/
+node_modules/
+**/node_modules/
+
+# Build/cache folders
+.vite/
+dist/
+build/
+__pycache__/
+*.py[cod]
+
+# Local IDE, OS, and temp files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.part
