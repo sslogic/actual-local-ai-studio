@@ -1,16 +1,16 @@
 # Actual Local AI Studio
 
-Local AI image generation for Windows. Double-click the launcher, add a model, and generate images in your browser.
+Local AI image generation for Windows.
 
 ## Install
 
-Download the repo, unzip it, then double-click:
+Download the ZIP, unzip it, then double-click:
 
 ```text
 start.bat
 ```
 
-First launch downloads and builds the local app files it needs. Leave the computer online until that finishes.
+First launch downloads and builds the app files it needs. Leave the computer online until it finishes.
 
 When it is ready, it opens:
 
