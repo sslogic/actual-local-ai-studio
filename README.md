@@ -18,7 +18,7 @@ start.bat
 
 Setup downloads and builds the app files it needs. Leave the computer online until it finishes.
 
-Setup download size is about 70 MB on non-NVIDIA systems, or about 780 MB on NVIDIA systems.
+Setup can download about 5-6 GB before models if the Python image runtime is not already installed.
 
 Models are downloaded separately in the app. Most are 2-7 GB each.
 

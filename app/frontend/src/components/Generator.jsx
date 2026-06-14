@@ -136,7 +136,7 @@ function Generator({
             crashError = status.error;
             break;
           }
-          if (!status.running && i > 3) {
+          if (status.running === false && !status.loading?.active && i > 3) {
             crashError = "The backend process terminated immediately on startup.";
             break;
           }

@@ -294,7 +294,7 @@ export async function getBackendStatus() {
     const r = await fetch("/api/backend-status");
     return await r.json();
   } catch (_) {
-    return { ready: false, settings: {} };
+    return { ready: false, running: null, settings: {} };
   }
 }
 
@@ -850,5 +850,4 @@ export async function getGenerationProgress() {
     return { active: false, error: e.message };
   }
 }
-
 

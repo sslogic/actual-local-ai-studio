@@ -10,6 +10,9 @@ $nodeDir     = Join-Path $toolsDir "node-win"
 $nodeExe     = Join-Path $nodeDir  "node.exe"
 $npmCmd      = Join-Path $nodeDir  "npm.cmd"
 $distDir     = Join-Path $appDir   "dist"
+$pythonDir   = Join-Path $toolsDir "python"
+$pythonExe   = Join-Path $pythonDir "python.exe"
+$pydepsDir   = Join-Path $appDir   "pydeps"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 function Print-Header {
@@ -145,9 +148,32 @@ function Expand-WithProgress {
 }
 
 # ══════════════════════════════════════════════════════════════════════════════
+function Test-DiffusersRuntime {
+    if (-not ((Test-Path $pythonExe) -and (Test-Path $pydepsDir))) {
+        return $false
+    }
+
+    $oldPythonPath = $env:PYTHONPATH
+    $oldPath = $env:PATH
+    try {
+        $env:PYTHONPATH = $pydepsDir
+        $torchLib = Join-Path $pydepsDir "torch\lib"
+        $pathParts = @($pythonDir)
+        if (Test-Path $torchLib) { $pathParts += $torchLib }
+        $env:PATH = (($pathParts | Where-Object { Test-Path $_ }) -join ";") + ";$env:PATH"
+        & $pythonExe -c "import torch, diffusers, safetensors" *> $null
+        return $LASTEXITCODE -eq 0
+    } catch {
+        return $false
+    } finally {
+        $env:PYTHONPATH = $oldPythonPath
+        $env:PATH = $oldPath
+    }
+}
+
 Print-Header
 
-$steps = 4
+$steps = 5
 
 # ── Step 1: Portable Node.js ──────────────────────────────────────────────────
 Print-Step 1 $steps "Setting up portable Node.js (app/tools/node-win/)"
@@ -379,7 +405,91 @@ if ($hasNvidia) {
 }
 
 # ── Step 3: npm install ───────────────────────────────────────────────────────
-Print-Step 3 $steps "Installing frontend dependencies (app/frontend/)"
+Print-Step 3 $steps "Setting up Python image runtime (app/pydeps/)"
+Write-Host ""
+
+if (Test-DiffusersRuntime) {
+    Print-OK "Python image runtime already ready."
+} else {
+    New-Item -ItemType Directory -Force -Path $toolsDir | Out-Null
+    New-Item -ItemType Directory -Force -Path $pydepsDir | Out-Null
+
+    if (-not (Test-Path $pythonExe)) {
+        $pythonPackage = Join-Path $toolsDir "python-3.12.nupkg"
+        $pythonTemp = Join-Path $toolsDir "python-nuget-temp"
+        $ok = Invoke-RichDownload `
+            -Url "https://www.nuget.org/api/v2/package/python/3.12.10" `
+            -Dest $pythonPackage `
+            -Label "Python 3.12 Runtime"
+
+        if (-not $ok) { Print-Fail "Cannot download Python runtime."; Read-Host; exit 1 }
+
+        if (Test-Path $pythonTemp) { Remove-Item $pythonTemp -Recurse -Force }
+        if (Test-Path $pythonDir) { Remove-Item $pythonDir -Recurse -Force }
+        Expand-WithProgress -ZipPath $pythonPackage -Destination $pythonTemp -Label "Python Runtime"
+        Move-Item (Join-Path $pythonTemp "tools") $pythonDir
+        Remove-Item $pythonPackage -Force -ErrorAction SilentlyContinue
+        Remove-Item $pythonTemp -Recurse -Force -ErrorAction SilentlyContinue
+
+        if (-not (Test-Path $pythonExe)) {
+            Print-Fail "Python runtime install failed."
+            Read-Host; exit 1
+        }
+    }
+
+    $vcDll = Join-Path $pythonDir "msvcp140.dll"
+    if (-not (Test-Path $vcDll)) {
+        $vcPackage = Join-Path $toolsDir "vcruntime140.nupkg"
+        $vcTemp = Join-Path $toolsDir "vcruntime140-temp"
+        $ok = Invoke-RichDownload `
+            -Url "https://www.nuget.org/api/v2/package/ThinkGeo.Dependency.MicrosoftVisualCRunTime140/15.0.0-beta007" `
+            -Dest $vcPackage `
+            -Label "Microsoft Visual C++ Runtime DLLs"
+
+        if (-not $ok) { Print-Fail "Cannot download Microsoft Visual C++ runtime DLLs."; Read-Host; exit 1 }
+
+        if (Test-Path $vcTemp) { Remove-Item $vcTemp -Recurse -Force }
+        Expand-WithProgress -ZipPath $vcPackage -Destination $vcTemp -Label "Microsoft Visual C++ Runtime"
+        Copy-Item (Join-Path $vcTemp "runtimes\win-x64\native\*.dll") $pythonDir -Force
+        Remove-Item $vcPackage -Force -ErrorAction SilentlyContinue
+        Remove-Item $vcTemp -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    if (Test-DiffusersRuntime) {
+        Print-OK "Python image runtime ready."
+    } else {
+        Print-Info "Installing Python image packages. This is several GB and can take a while..."
+        & $pythonExe -m pip install --upgrade pip
+        if ($LASTEXITCODE -ne 0) { Print-Fail "pip upgrade failed."; Read-Host; exit 1 }
+
+        & $pythonExe -m pip install `
+            --upgrade `
+            --target $pydepsDir `
+            --extra-index-url "https://download.pytorch.org/whl/cu124" `
+            torch==2.6.0+cu124 `
+            diffusers==0.38.0 `
+            transformers==4.57.3 `
+            accelerate `
+            safetensors `
+            pillow `
+            sentencepiece `
+            protobuf `
+            psutil
+        if ($LASTEXITCODE -ne 0) {
+            Print-Fail "Python image runtime install failed."
+            Read-Host; exit 1
+        }
+
+        if (Test-DiffusersRuntime) {
+            Print-OK "Python image runtime ready."
+        } else {
+            Print-Fail "Python image runtime did not validate."
+            Read-Host; exit 1
+        }
+    }
+}
+
+Print-Step 4 $steps "Installing frontend dependencies (app/frontend/)"
 Write-Host ""
 
 if (-not (Test-Path $npmCmd)) {
@@ -401,7 +511,7 @@ try {
     Print-OK "Dependencies installed!"
 
     # ── Step 4: Build frontend ────────────────────────────────────────────────
-    Print-Step 4 $steps "Building frontend -> app/dist/"
+    Print-Step 5 $steps "Building frontend -> app/dist/"
     Write-Host ""
 
     & $npmCmd run build 2>&1

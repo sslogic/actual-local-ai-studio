@@ -9,6 +9,8 @@ set DIST=%APP%\dist\index.html
 set SETUP=%~dp0scripts\setup.ps1
 set CUDA_BACKEND=%APP%\backend\win\cuda\sd-cuda.exe
 set VULKAN_BACKEND=%APP%\backend\win\vulkan\sd-vulkan.exe
+set PYTHON=%APP%\tools\python\python.exe
+set PYDEPS=%APP%\pydeps
 set SERVE=%~dp0scripts\serve.cjs
 if "%FRONTEND_PORT%"=="" set FRONTEND_PORT=1420
 set SETUP_REASON=
@@ -26,6 +28,14 @@ if not exist "%NPM%" (
 )
 if not exist "%DIST%" (
     set SETUP_REASON=Frontend build is missing.
+    goto :run_setup
+)
+if not exist "%PYTHON%" (
+    set SETUP_REASON=Python image runtime is missing.
+    goto :run_setup
+)
+if not exist "%PYDEPS%" (
+    set SETUP_REASON=Python image packages are missing.
     goto :run_setup
 )
 if exist "%CUDA_BACKEND%" goto :launch

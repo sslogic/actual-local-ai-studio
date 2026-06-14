@@ -78,7 +78,6 @@ function resolvePythonExe() {
     path.join(ROOT, "app", "python", "python.exe"),
     path.join(ROOT, "app", "tools", "python", "python.exe"),
     path.join(ROOT, ".venv", "Scripts", "python.exe"),
-    path.join(os.homedir(), ".cache", "codex-runtimes", "codex-primary-runtime", "dependencies", "python", "python.exe"),
     "python",
     "py",
   ].filter(Boolean);
@@ -99,6 +98,7 @@ let diffusersAvailability = null;
 
 function getDiffusersDllPaths() {
   return [
+    path.join(ROOT, "app", "tools", "python"),
     path.join(PYDEPS, "torch", "lib"),
   ].filter((dir) => fs.existsSync(dir));
 }
@@ -121,7 +121,7 @@ function canStartDiffusers() {
     diffusersAvailability = false;
     return diffusersAvailability;
   }
-  const probe = spawnSync(PYTHON_EXE, ["-c", "import torch"], {
+  const probe = spawnSync(PYTHON_EXE, ["-c", "import torch, diffusers, safetensors"], {
     env: getDiffusersEnv(),
     stdio: "ignore",
   });
